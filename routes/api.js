@@ -55,32 +55,32 @@ module.exports = function (app) {
       let book = await Book.findById({ _id: bookid });
 
       if (!book) {
-        return res.status(200).json({ text: "no book exists" });
+        return res.status(200).send("no book exists" );
       }
 
       res.status(200).json(book);
 
-      //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+      //json res format: {"_id": bookid, "title": book_title, "comments": [comments,comments,...]}
     })
 
     .post(async (req, res) => {
       const bookId = req.params.id;
-      const comment = req.body.comment;
+      const comments = req.body.comments;
       const book = await Book.findById({ _id: bookId });
 
       if (!book) {
-        return res.status(200).json("no book exists");
+        return res.status(200).send("no book exists");
       }
-      if (!comment) {
+      if (!comments) {
         return res
           .status(200)
-          .json({ error: "missing required field comment" });
+          .json({ error: "missing required field comments" });
       }
 
       try {
         // Assume the book model has an array field 'comments'
-        book.comment.push(comment);
-        book.commentcount = book.comment.length; // Update comment count
+        book.comments.push(comments);
+        book.commentcount = book.comments.length; // Update comments count
 
         const updatedBook = await book.save();
 
@@ -89,12 +89,18 @@ module.exports = function (app) {
         console.error(error);
         res
           .status(200)
-          .json({ error: "An error occurred while adding the comment" });
+          .json({ error: "An error occurred while adding the comments" });
       }
     })
 
-    .delete(function (req, res) {
+    .delete(async function (req, res) {
       let bookid = req.params.id;
+      let book = await Book.findById({_id: bookid});
+
+      if(!book) {
+        return res.status(200).send("no book exists");
+
+      }
       //if successful response will be 'delete successful'
     });
 };
