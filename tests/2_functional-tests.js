@@ -150,13 +150,12 @@ suite("Functional Tests", function () {
                 comments: "blabla test"
               })
               .end(function (err, res) {
-                console.log(res.body)
                 assert.equal(res.body.comments, "blabla test")
                 done();
               });
           });
 
-         /*  test("Test POST /api/books/[id] without comments field", function (done) {
+          test("Test POST /api/books/[id] without comments field", function (done) {
             chai
               .request(server)
               .post(`/api/books/${testBookId}`)
@@ -165,7 +164,7 @@ suite("Functional Tests", function () {
                 assert.equal(res.body, "missing required field comment");
                 done();
               });
-          }); */
+          }); 
 
           test("Test POST /api/books/[id] with comments, id not in db", function (done) {
             chai
@@ -173,7 +172,7 @@ suite("Functional Tests", function () {
               .post(`/api/books/${failTestId}`)
               .send({ comments: "blabla test" })
               .end(function (err, res) {
-                assert.equal(res.body.error, "no book exists");
+                assert.equal(res.body, "no book exists");
                 done();
               });
           });
@@ -182,7 +181,7 @@ suite("Functional Tests", function () {
 
       suite("DELETE /api/books/[id] => delete book object id", function () {
 
-/* 
+
         test("Test DELETE /api/books/[id] with valid id in db", function (done) {
           chai
             .request(server)
@@ -203,7 +202,7 @@ suite("Functional Tests", function () {
               assert.equal(res.text, "no book exists");
               done();
             });
-        }); */
+        }); 
       });
     });
   });

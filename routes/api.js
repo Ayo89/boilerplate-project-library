@@ -71,31 +71,26 @@ module.exports = function (app) {
       //json res format: {"_id": bookid, "title": book_title, "comments": [comments,comments,...]}
     })
 
-    .post((req, res) => {
+    .post(async (req, res) => {
       const bookId = req.params.id;
       const comment = req.body.comments;
-      console.log(comment)
+      console.log(comment);
       if (comment == undefined) {
         return res.json("missing required field comment");
       }
 
-      Book.findByIdAndUpdate(
-        bookId,
-        { $push: { comments: comment }, $inc: { commentcount: 1 } },
-        { new: true }, // {new, true} returns the updated version and not the original. (Default is false)
-        (error, updatedBook) => {
-          if (error) {
-            console.log("entra2");
-
-            return res.status(200).json("no book exists");
-          }
-
-          if (!updatedBook) {
-            console.log('entra1')
-            return res.status(200).json("no book exists");
-          } else return res.status(200).json(updatedBook);
-        }
-      );
+      try {
+        const updatedBook = await Book.findByIdAndUpdate(
+          bookId,
+          { $push: { comments: comment }, $inc: { commentcount: 1 } },
+          { new: true } // {new, true} returns the updated version and not the original. (Default is false)
+        );
+        if (!updatedBook) {
+          return res.status(200).json("no book exists");
+        } else return res.status(200).json(updatedBook);
+      } catch (error) {
+        return res.status(200).json("no book exists");
+      }
     })
 
     .delete(async function (req, res) {
