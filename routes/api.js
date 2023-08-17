@@ -26,7 +26,7 @@ module.exports = function (app) {
       let title = req.body.title;
 
       if (!title) {
-        return res.status(200).json({ error: "missing required field title" });
+        return res.status(200).json("missing required field title");
       }
 
       let newBook = new Book({
@@ -35,17 +35,23 @@ module.exports = function (app) {
 
       try {
         const savedBook = await newBook.save();
-        res.status(200).json(savedBook);
+        res.status(200).json({ title: savedBook.title, _id: savedBook._id });
       } catch (error) {
-        console.error(error);
         res
           .status(500)
           .json({ error: "An error occurred while saving the book" });
       }
     })
 
-    .delete(function (req, res) {
-      //if successful response will be 'complete delete successful'
+    .delete(async function (req, res) {
+      try {
+        await Book.deleteMany();
+        return res.status(200).send("complete delete successful");
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ error: "An error occurred while removing all items" });
+      }
     });
 
   app
@@ -55,79 +61,65 @@ module.exports = function (app) {
       let book = await Book.findById({ _id: bookid });
 
       if (!book) {
-        return res.status(200).send("no book exists" );
+        return res.status(200).send("no book exists");
       }
 
-      res.status(200).json(book);
+      res
+        .status(200)
+        .json({ _id: book._id, title: book.title, comments: book.comments });
 
       //json res format: {"_id": bookid, "title": book_title, "comments": [comments,comments,...]}
     })
 
-    .post(async (req, res) => {
+    .post((req, res) => {
       const bookId = req.params.id;
-      const comments = req.body.comments;
-      const book = await Book.findById({ _id: bookId });
+      const comment = req.body.comments;
+      console.log(comment)
+      if (comment == undefined) {
+        return res.json("missing required field comment");
+      }
+
+      Book.findByIdAndUpdate(
+        bookId,
+        { $push: { comments: comment }, $inc: { commentcount: 1 } },
+        { new: true }, // {new, true} returns the updated version and not the original. (Default is false)
+        (error, updatedBook) => {
+          if (error) {
+            console.log("entra2");
+
+            return res.status(200).json("no book exists");
+          }
+
+          if (!updatedBook) {
+            console.log('entra1')
+            return res.status(200).json("no book exists");
+          } else return res.status(200).json(updatedBook);
+        }
+      );
+    })
+
+    .delete(async function (req, res) {
+      let bookId = req.params.id;
+      let book;
+      try {
+        book = await Book.findById({ _id: bookId });
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ error: "An error occurred while retrieving the book" });
+      }
 
       if (!book) {
         return res.status(200).send("no book exists");
       }
-      if (!comments) {
-        return res
-          .status(200)
-          .json({ error: "missing required field comments" });
-      }
 
       try {
-        // Assume the book model has an array field 'comments'
-        book.comments.push(comments);
-        book.commentcount = book.comments.length; // Update comments count
-
-        const updatedBook = await book.save();
-
-        res.status(200).json(updatedBook);
+        await book.deleteOne();
+        return res.status(200).send("delete successful");
       } catch (error) {
-        console.error(error);
-        res
-          .status(200)
-          .json({ error: "An error occurred while adding the comments" });
+        return res
+          .status(500)
+          .json({ error: "An error occurred while removing the book" });
       }
-    })
-
-    .delete(async function (req, res) {
-  let bookId = req.params.id;
-
-  if(!bookId) {
-    try {
-      await Book.deleteMany();
-      return res.status(200).send("complete delete successful");
-    } catch (error) {
-      return res.status(500).json({error: "An error occurred while removing all items"});
-    }
-  }
-
-  let book;
-  try {
-    book = await Book.findById({_id: bookId});
-  } catch (error) {
-    return res.status(500).json({error: "An error occurred while retrieving the book"});
-  }
-
-  if(!book) {
-    return res.status(200).send("no book exists");
-  }
-
-  try {
-    await book.deleteOne();
-    return res.status(200).send("delete successful");
-  } catch (error) {
-    return res.status(500).json({error: "An error occurred while removing the book"});
-  }
-});
-
-
-
-
-
-
-
+    });
 };
