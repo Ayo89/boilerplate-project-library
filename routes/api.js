@@ -94,13 +94,40 @@ module.exports = function (app) {
     })
 
     .delete(async function (req, res) {
-      let bookid = req.params.id;
-      let book = await Book.findById({_id: bookid});
+  let bookId = req.params.id;
 
-      if(!book) {
-        return res.status(200).send("no book exists");
+  if(!bookId) {
+    try {
+      await Book.deleteMany();
+      return res.status(200).send("complete delete successful");
+    } catch (error) {
+      return res.status(500).json({error: "An error occurred while removing all items"});
+    }
+  }
 
-      }
-      //if successful response will be 'delete successful'
-    });
+  let book;
+  try {
+    book = await Book.findById({_id: bookId});
+  } catch (error) {
+    return res.status(500).json({error: "An error occurred while retrieving the book"});
+  }
+
+  if(!book) {
+    return res.status(200).send("no book exists");
+  }
+
+  try {
+    await book.deleteOne();
+    return res.status(200).send("delete successful");
+  } catch (error) {
+    return res.status(500).json({error: "An error occurred while removing the book"});
+  }
+});
+
+
+
+
+
+
+
 };
